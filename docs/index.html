@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NK-Bank | Interactive Preview &amp; Django Banking App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" crossorigin="anonymous">
+    <style>
+        :root {
+            --nk-navy: #0f2942;
+            --nk-teal: #0d9488;
+        }
+        body {
+            background-color: #f4f7fb;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .nk-navbar {
+            background-color: var(--nk-navy);
+        }
+        .nk-hero-card {
+            background: linear-gradient(135deg, #0f2942 0%, #164e63 60%, #0d9488 100%);
+            color: #ffffff;
+            border: none;
+        }
+        .nk-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 10px rgba(15, 41, 66, 0.05);
+        }
+        .nk-mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            letter-spacing: 0.06em;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark nk-navbar shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
+                <i class="bi bi-bank2 text-info"></i>
+                <span>NK-Bank</span>
+                <span class="badge bg-info text-dark ms-1">Static Preview</span>
+            </a>
+            <div class="d-flex align-items-center gap-2 ms-auto">
+                <a href="https://github.com/aditya01141/Django-project" target="_blank" rel="noopener" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-github me-1"></i>View Source on GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-4 flex-grow-1">
+        <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <div>
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <strong>GitHub Pages Interactive Preview:</strong> GitHub Pages hosts static HTML/CSS/JS only. Try transfers, donations, filters, and CSV export below in-browser, or deploy the full Python/Django + SQLite + ReportLab PDF backend via <code>render.yaml</code>.
+            </div>
+            <span class="badge bg-primary">Demo User: alice</span>
+        </div>
+
+        <div class="card nk-hero-card rounded-4 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="row align-items-center g-4">
+                    <div class="col-md-7">
+                        <div class="text-white-50 small text-uppercase fw-semibold mb-1">NK-Bank Checking Account (Interactive Demo)</div>
+                        <h1 class="h3 fw-bold mb-3">Welcome back, alice</h1>
+                        <div class="d-inline-flex align-items-center gap-2 bg-white bg-opacity-10 rounded-3 px-3 py-2">
+                            <span class="small text-white-50">Account Number:</span>
+                            <span class="nk-mono fw-bold fs-5">4829103745</span>
+                        </div>
+                    </div>
+                    <div class="col-md-5 text-md-end">
+                        <div class="text-white-50 small text-uppercase fw-semibold mb-1">Available Balance</div>
+                        <div id="balanceDisplay" class="display-5 fw-bold">$785.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-lg-3">
+                <div class="card nk-card h-100">
+                    <div class="card-body">
+                        <div class="text-muted small fw-semibold text-uppercase mb-1">Total Received</div>
+                        <div id="receivedTotal" class="h4 fw-bold text-success mb-0">+$60.00</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card nk-card h-100">
+                    <div class="card-body">
+                        <div class="text-muted small fw-semibold text-uppercase mb-1">Total Sent</div>
+                        <div id="sentTotal" class="h4 fw-bold text-warning-emphasis mb-0">-$175.00</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card nk-card h-100">
+                    <div class="card-body">
+                        <div class="text-muted small fw-semibold text-uppercase mb-1">Total Donated</div>
+                        <div id="donatedTotal" class="h4 fw-bold text-danger mb-0">-$100.00</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="card nk-card h-100">
+                    <div class="card-body">
+                        <div class="text-muted small fw-semibold text-uppercase mb-1">Saved Beneficiaries</div>
+                        <div class="h4 fw-bold text-primary mb-0">1</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="card nk-card h-100">
+                    <div class="card-header bg-white py-3">
+                        <h2 class="h5 fw-bold mb-0"><i class="bi bi-send me-2 text-primary"></i>Try Peer-to-Peer Transfer</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="demoTransferForm">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Recipient</label>
+                                <input type="text" id="transferParty" class="form-control" value="bob (7392018462)" required>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-5">
+                                    <label class="form-label fw-semibold">Amount ($)</label>
+                                    <input type="number" id="transferAmount" class="form-control" step="0.01" min="0.01" value="50.00" required>
+                                </div>
+                                <div class="col-7">
+                                    <label class="form-label fw-semibold">Note</label>
+                                    <input type="text" id="transferNote" class="form-control" placeholder="Lunch split">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 fw-semibold">Simulate Transfer</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card nk-card h-100">
+                    <div class="card-header bg-white py-3">
+                        <h2 class="h5 fw-bold mb-0"><i class="bi bi-heart-pulse me-2 text-danger"></i>Try Charity Donation</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="demoDonateForm">
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold">Charity Name</label>
+                                <input type="text" id="donateCharity" class="form-control" value="Animal Welfare Trust" required>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 mb-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary preset-btn" data-amt="100">$100</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary preset-btn" data-amt="250">$250</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary preset-btn" data-amt="500">$500</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary preset-btn" data-amt="1000">$1000</button>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-5">
+                                    <input type="number" id="donateAmount" class="form-control" step="0.01" min="0.01" value="100.00" required>
+                                </div>
+                                <div class="col-7">
+                                    <input type="text" id="donateMessage" class="form-control" placeholder="Optional message">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-danger w-100 fw-semibold">Simulate Donation</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card nk-card">
+            <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <h2 class="h5 fw-bold mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Activity Preview</h2>
+                <button type="button" id="exportCsvBtn" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-filetype-csv me-1"></i>Export CSV
+                </button>
+            </div>
+            <div class="card-body border-bottom bg-light-subtle py-3">
+                <div class="row g-2">
+                    <div class="col-md-8">
+                        <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search counterparty, charity, or note...">
+                    </div>
+                    <div class="col-md-4">
+                        <select id="typeFilter" class="form-select form-select-sm">
+                            <option value="all">All Activity</option>
+                            <option value="sent">Sent Transfers</option>
+                            <option value="received">Received Transfers</option>
+                            <option value="donation">Charity Donations</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Date &amp; Time</th>
+                            <th>Type</th>
+                            <th>Counterparty / Charity</th>
+                            <th>Note / Message</th>
+                            <th class="text-end pe-4">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activityRows"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-3 border-top bg-white text-center text-muted small">
+        <div class="container">
+            NK-Bank &middot; Django 6 + Bootstrap 5 + ReportLab PDF &middot;
+            <a href="https://github.com/aditya01141/Django-project" target="_blank" rel="noopener">GitHub Repository</a>
+        </div>
+    </footer>
+
+    <script>
+        let balance = 785.00;
+        const activities = [
+            { date: '2026-11-25 11:15', kind: 'donation', label: 'Charity Donation', party: 'Animal Welfare Trust', note: 'Monthly shelter support', amount: 100.00 },
+            { date: '2026-11-25 11:05', kind: 'received', label: 'Received Transfer', party: 'bob (7392018462)', note: 'Shared cab reimbursement', amount: 60.00 },
+            { date: '2026-11-25 10:50', kind: 'sent', label: 'Sent Transfer', party: 'bob (7392018462)', note: 'Project dinner split', amount: 175.00 },
+        ];
+
+        function fmt(n) {
+            return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function filteredActivities() {
+            const q = document.getElementById('searchInput').value.trim().toLowerCase();
+            const t = document.getElementById('typeFilter').value;
+            return activities.filter(item =>
+                (t === 'all' || item.kind === t) &&
+                (!q || item.party.toLowerCase().includes(q) || item.note.toLowerCase().includes(q) || item.label.toLowerCase().includes(q))
+            );
+        }
+
+        function render() {
+            document.getElementById('balanceDisplay').textContent = '$' + fmt(balance);
+            const sum = (k) => activities.filter(a => a.kind === k).reduce((acc, a) => acc + a.amount, 0);
+            document.getElementById('receivedTotal').textContent = '+$' + fmt(sum('received'));
+            document.getElementById('sentTotal').textContent = '-$' + fmt(sum('sent'));
+            document.getElementById('donatedTotal').textContent = '-$' + fmt(sum('donation'));
+
+            const tbody = document.getElementById('activityRows');
+            tbody.innerHTML = '';
+            const rows = filteredActivities();
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No matching records.</td></tr>';
+                return;
+            }
+            for (const item of rows) {
+                const badgeClass = item.kind === 'received' ? 'bg-success-subtle text-success' : (item.kind === 'sent' ? 'bg-warning-subtle text-warning-emphasis' : 'bg-info-subtle text-info-emphasis');
+                const amtClass = item.kind === 'received' ? 'text-success' : 'text-danger';
+                const sign = item.kind === 'received' ? '+' : '-';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="ps-4 text-muted small">${item.date}</td>
+                    <td><span class="badge ${badgeClass}">${item.label}</span></td>
+                    <td class="fw-medium"></td>
+                    <td class="text-muted"></td>
+                    <td class="text-end pe-4 fw-bold ${amtClass}">${sign}$${fmt(item.amount)}</td>
+                `;
+                tr.children[2].textContent = item.party;
+                tr.children[3].textContent = item.note || '—';
+                tbody.appendChild(tr);
+            }
+        }
+
+        document.getElementById('demoTransferForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const amt = parseFloat(document.getElementById('transferAmount').value);
+            if (!(amt > 0) || amt > balance) {
+                alert('Insufficient balance or invalid amount.');
+                return;
+            }
+            balance -= amt;
+            activities.unshift({
+                date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+                kind: 'sent',
+                label: 'Sent Transfer',
+                party: document.getElementById('transferParty').value.trim(),
+                note: document.getElementById('transferNote').value.trim() || '—',
+                amount: amt,
+            });
+            render();
+        });
+
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('donateAmount').value = btn.dataset.amt;
+            });
+        });
+
+        document.getElementById('demoDonateForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const amt = parseFloat(document.getElementById('donateAmount').value);
+            if (!(amt > 0) || amt > balance) {
+                alert('Insufficient balance or invalid amount.');
+                return;
+            }
+            balance -= amt;
+            activities.unshift({
+                date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+                kind: 'donation',
+                label: 'Charity Donation',
+                party: document.getElementById('donateCharity').value.trim() || 'Animal Welfare Trust',
+                note: document.getElementById('donateMessage').value.trim() || '—',
+                amount: amt,
+            });
+            render();
+        });
+
+        document.getElementById('searchInput').addEventListener('input', render);
+        document.getElementById('typeFilter').addEventListener('change', render);
+        document.getElementById('exportCsvBtn').addEventListener('click', () => {
+            const lines = [['Date & Time', 'Type', 'Counterparty / Charity', 'Note / Message', 'Amount']];
+            for (const item of filteredActivities()) {
+                const signed = item.kind === 'received' ? item.amount.toFixed(2) : (-item.amount).toFixed(2);
+                lines.push([item.date, item.label, item.party, item.note, signed].map(v => `"${String(v).replace(/"/g, '""')}"`));
+            }
+            const blob = new Blob([lines.map(r => r.join(',')).join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'nkbank_preview_statement.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        render();
+    </script>
+</body>
+</html>

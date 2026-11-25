@@ -1,0 +1,216 @@
+{% extends "banking/base.html" %}
+{% load humanize %}
+
+{% block title %}Dashboard | NK-Bank{% endblock %}
+
+{% block content %}
+<div class="card nk-hero-card rounded-4 shadow-sm mb-4">
+    <div class="card-body p-4 p-md-5">
+        <div class="row align-items-center g-4">
+            <div class="col-md-7">
+                <div class="text-white-50 small text-uppercase fw-semibold mb-1">NK-Bank Checking Account</div>
+                <h1 class="h3 fw-bold mb-3">Welcome back, {{ user.username }}</h1>
+                <div class="d-inline-flex align-items-center gap-2 bg-white bg-opacity-10 rounded-3 px-3 py-2">
+                    <span class="small text-white-50">Account Number:</span>
+                    <span id="accountNumberText" class="nk-mono fw-bold fs-5">{{ account.account_number }}</span>
+                    <button type="button" id="copyAccountBtn" class="btn btn-sm btn-outline-light ms-1" title="Copy account number">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-5 text-md-end">
+                <div class="text-white-50 small text-uppercase fw-semibold mb-1">Available Balance</div>
+                <div class="display-5 fw-bold">${{ account.balance|floatformat:2|intcomma }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card nk-card h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold text-uppercase mb-1">Total Received</div>
+                <div class="h4 fw-bold text-success mb-0">+${{ summary.total_received|floatformat:2|intcomma }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card nk-card h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold text-uppercase mb-1">Total Sent</div>
+                <div class="h4 fw-bold text-warning-emphasis mb-0">-${{ summary.total_sent|floatformat:2|intcomma }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card nk-card h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold text-uppercase mb-1">Total Donated</div>
+                <div class="h4 fw-bold text-danger mb-0">-${{ summary.total_donated|floatformat:2|intcomma }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card nk-card h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold text-uppercase mb-1">Saved Beneficiaries</div>
+                <div class="h4 fw-bold text-primary mb-0">{{ summary.beneficiaries_count }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <a href="{% url 'transfer' %}" class="card nk-card text-decoration-none text-dark h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 fs-4">
+                    <i class="bi bi-send"></i>
+                </div>
+                <div>
+                    <div class="fw-bold">Send Money</div>
+                    <div class="text-muted small">Instant peer-to-peer transfer</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'beneficiaries' %}" class="card nk-card text-decoration-none text-dark h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-success bg-opacity-10 text-success p-3 fs-4">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div>
+                    <div class="fw-bold">Beneficiaries</div>
+                    <div class="text-muted small">Manage saved recipients</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'donate' %}" class="card nk-card text-decoration-none text-dark h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-danger bg-opacity-10 text-danger p-3 fs-4">
+                    <i class="bi bi-heart-pulse"></i>
+                </div>
+                <div>
+                    <div class="fw-bold">Donate to Charity</div>
+                    <div class="text-muted small">Support Animal Welfare Trust</div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="card nk-card">
+    <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <h2 class="h5 fw-bold mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Account Activity</h2>
+            <span class="badge bg-secondary-subtle text-secondary">{{ activities|length }} record{{ activities|length|pluralize }}</span>
+        </div>
+        <a href="{% url 'export_csv' %}?q={{ query|urlencode }}&type={{ activity_type|urlencode }}" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-filetype-csv me-1"></i>Export CSV
+        </a>
+    </div>
+
+    <div class="card-body border-bottom bg-light-subtle py-3">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search counterparty, account number, charity, or note...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="type" class="form-select form-select-sm">
+                    <option value="all" {% if activity_type == 'all' %}selected{% endif %}>All Activity</option>
+                    <option value="sent" {% if activity_type == 'sent' %}selected{% endif %}>Sent Transfers</option>
+                    <option value="received" {% if activity_type == 'received' %}selected{% endif %}>Received Transfers</option>
+                    <option value="donation" {% if activity_type == 'donation' %}selected{% endif %}>Charity Donations</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-primary flex-grow-1">Filter</button>
+                {% if has_filters %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body p-0">
+        {% if activities %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Date &amp; Time</th>
+                            <th>Type</th>
+                            <th>Counterparty / Charity</th>
+                            <th>Note / Message</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-end pe-4">Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in activities %}
+                            <tr>
+                                <td class="ps-4 text-muted small">{{ item.timestamp|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    {% if item.kind == 'sent' %}
+                                        <span class="badge bg-warning-subtle text-warning-emphasis">{{ item.label }}</span>
+                                    {% elif item.kind == 'received' %}
+                                        <span class="badge bg-success-subtle text-success">{{ item.label }}</span>
+                                    {% else %}
+                                        <span class="badge bg-info-subtle text-info-emphasis">{{ item.label }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-medium">{{ item.party }}</td>
+                                <td class="text-muted">{{ item.note }}</td>
+                                <td class="text-end fw-bold {% if item.kind == 'received' %}text-success{% else %}text-danger{% endif %}">
+                                    {{ item.signed_amount }}
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="{{ item.receipt_url }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-journal-text fs-1 d-block mb-2"></i>
+                {% if has_filters %}
+                    <p class="mb-3">No activity records match your current search or filter.</p>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+                {% else %}
+                    <p class="mb-3">No transfers or donations yet.</p>
+                    <a href="{% url 'transfer' %}" class="btn btn-primary btn-sm me-2">Make a Transfer</a>
+                    <a href="{% url 'donate' %}" class="btn btn-outline-primary btn-sm">Make a Donation</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const copyBtn = document.getElementById('copyAccountBtn');
+    const accountText = document.getElementById('accountNumberText');
+    if (copyBtn && accountText && navigator.clipboard) {
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(accountText.textContent.trim()).then(() => {
+                copyBtn.innerHTML = '<i class="bi bi-check2"></i>';
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<i class="bi bi-clipboard"></i>';
+                }, 1500);
+            });
+        });
+    }
+</script>
+{% endblock %}

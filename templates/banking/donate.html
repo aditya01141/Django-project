@@ -1,0 +1,109 @@
+{% extends "banking/base.html" %}
+{% load humanize %}
+
+{% block title %}Charity Donation | NK-Bank{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card nk-card">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h1 class="h5 fw-bold mb-0"><i class="bi bi-heart-pulse me-2 text-danger"></i>Make a Charity Donation</h1>
+                <span class="badge bg-success-subtle text-success fs-6">
+                    Balance: ${{ account.balance|floatformat:2|intcomma }}
+                </span>
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-info d-flex align-items-center gap-2 mb-4">
+                    <i class="bi bi-info-circle-fill fs-5"></i>
+                    <div>Support verified charitable causes directly from your NK-Bank balance with an instant downloadable PDF receipt.</div>
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.charity_name.id_for_label }}" class="form-label fw-semibold">Charity Name</label>
+                        {{ form.charity_name }}
+                        {% for error in form.charity_name.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Quick Preset Amounts</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for preset in preset_amounts %}
+                                <button type="button" class="btn btn-outline-primary preset-btn" data-amount="{{ preset }}">
+                                    ${{ preset }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.amount.id_for_label }}" class="form-label fw-semibold">Donation Amount ($)</label>
+                        {{ form.amount }}
+                        {% for error in form.amount.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.message.id_for_label }}" class="form-label fw-semibold">Message (optional)</label>
+                        {{ form.message }}
+                        {% for error in form.message.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-danger px-4 fw-semibold">
+                            <i class="bi bi-heart-fill me-1"></i>Donate Now
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const amountInput = document.getElementById('{{ form.amount.id_for_label }}');
+    const presetButtons = document.querySelectorAll('.preset-btn');
+
+    function syncPresetHighlight() {
+        const currentVal = amountInput ? amountInput.value.trim() : '';
+        presetButtons.forEach((btn) => {
+            const isMatch = Number(currentVal) === Number(btn.dataset.amount) && currentVal !== '';
+            btn.classList.toggle('btn-primary', isMatch);
+            btn.classList.toggle('btn-outline-primary', !isMatch);
+        });
+    }
+
+    presetButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            if (amountInput) {
+                amountInput.value = btn.dataset.amount;
+                syncPresetHighlight();
+            }
+        });
+    });
+
+    if (amountInput) {
+        amountInput.addEventListener('input', syncPresetHighlight);
+        syncPresetHighlight();
+    }
+</script>
+{% endblock %}
